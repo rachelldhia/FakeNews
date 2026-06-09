@@ -219,7 +219,12 @@ document.addEventListener('DOMContentLoaded', () => {
         errorState.classList.remove('hidden');
         
         if (message.includes('Failed to fetch')) {
-            errorText.textContent = "Could not connect to the Prediction API. Please make sure your Python Flask server is running locally at http://localhost:5001.";
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocal) {
+                errorText.textContent = "Could not connect to the local Prediction API. Please make sure your Python Flask server is running locally at http://localhost:5001.";
+            } else {
+                errorText.textContent = "Could not connect to the production Prediction API on Railway. The backend server might be offline or still building the latest deployment. Please check the Railway dashboard to redeploy.";
+            }
         } else {
             errorText.textContent = message;
         }
