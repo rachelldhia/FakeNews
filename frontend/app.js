@@ -124,8 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1200);
 
         try {
-            // 3. Make HTTP request to the Flask local server
-            const response = await fetch('https://fakenewsml-production.up.railway.app/predict', {
+            // 3. Make HTTP request (local server for localhost, production server for Vercel)
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiUrl = isLocal 
+                ? 'http://localhost:5001/predict' 
+                : 'https://fakenewsml-production.up.railway.app/predict';
+
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
