@@ -44,7 +44,7 @@ def health_check():
         return jsonify({"status": "unhealthy", "message": "Model not loaded!"}), 503
 
 
-@app.route('/predict', methods=['POST', 'OPTIONS'])
+@app.route('/predict', methods=['POST'])
 def predict():
     """
     Endpoint untuk memprediksi berita Fake atau Real.
@@ -66,12 +66,7 @@ def predict():
         description: Bad Request (Input JSON tidak valid atau kosong)
       500:
         description: Internal Server Error (Kendala pada server)
-      204:
-        description: Preflight options success
     """
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "CORS preflight ok"}), 200
-
     # Error Handling 1: Jika model belum siap
     if model_pipeline is None:
         return jsonify({"error": "Model is not available on the server."}), 500
