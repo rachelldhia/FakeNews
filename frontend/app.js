@@ -126,9 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // 3. Make HTTP request (local server for localhost, production server for Vercel)
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            // PERBAIKAN: Ditambahkan '/predict' di ujung URL Railway
             const apiUrl = isLocal 
                 ? 'http://localhost:5001/predict' 
-                : 'https://fakenewsml-production.up.railway.app/predict';
+                : 'fakenewsml-production-9bb0.up.railway.app'; 
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
