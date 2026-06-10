@@ -9,22 +9,36 @@ import os
 import logging
 
 app = Flask(__name__)
-CORS(app)
+
+# Mengizinkan CORS secara global dari semua domain (Vercel, Localhost, dll)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
 # Inisialisasi Swagger untuk dokumentasi API interaktif
 swagger = Swagger(app)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Memuat model saat aplikasi Flask mulai berjalan
-MODEL_PATH = os.path.join(os.path.dirname(__file__), '../models/fake_news_model.pkl')
+# Penentuan path model yang fleksibel di server produksi
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, '../models/fake_news_model.pkl')
+
+# Alternatif jika folder flat di server
+if not os.path.exists(MODEL_PATH):
+    MODEL_PATH = os.path.join(BASE_DIR, 'models/fake_news_model.pkl')
+if not os.path.exists(MODEL_PATH):
+    MODEL_PATH = os.path.join(BASE_DIR, 'fake_news_model.pkl')
+
 try:
-    model_pipeline = joblib.load(MODEL_PATH)
-    logging.info("Model berhasil dimuat ke dalam API.")
+    if os.path.exists(MODEL_PATH):
+        model_pipeline = joblib.load(MODEL_PATH)
+        logging.info(f"Model berhasil dimuat dari: {MODEL_PATH}")
+    else:
+        logging.error("File model tidak ditemukan di path mana pun!")
+        model_pipeline = None
 except Exception as e:
     logging.error(f"Gagal memuat model. Error: {e}")
     model_pipeline = None
-
 
 
 @app.route('/health', methods=['GET'])
@@ -101,9 +115,10 @@ def predict():
 
     except Exception as e:
         logging.error(f"Error saat prediksi: {e}")
-        return jsonify({"error": "An internal server error occurred while processing the request."}), 500
+        return jsonify({"error": f"An internal server error occurred: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
-    # Host 0.0.0.0 penting agar nanti bisa diakses dari dalam Docker container
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    # Membaca PORT secara dinamis dari Environment Railway
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port, debug=False)
