@@ -127,25 +127,42 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. Make HTTP request ke Railway API
             const apiUrl = 'https://fakenewsml-production.up.railway.app/predict';
 
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ text: text })
-            });
+            let response;
+            try {
+                response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+            } catch (networkErr) {
+                clearInterval(phaseInterval);
+                throw new Error('Failed to fetch');
+            }
 
             clearInterval(phaseInterval);
 
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || 'Server error occurred during prediction.');
+            // Safely parse response — API might return HTML on server error
+            const contentType = response.headers.get('content-type') || '';
+            let responseBody;
+            if (contentType.includes('application/json')) {
+                responseBody = await response.json();
+            } else {
+                // Non-JSON response (e.g. Railway HTML error page)
+                const rawText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`Server returned HTTP ${response.status}. The backend may be offline or restarting.`);
+                }
+                throw new Error(`Unexpected response format from server (status ${response.status}).`);
             }
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(responseBody.error || `Server error (HTTP ${response.status}).`);
+            }
 
             // 4. Render prediction results
-            showResult(data);
+            showResult(responseBody);
 
         } catch (err) {
             clearInterval(phaseInterval);
