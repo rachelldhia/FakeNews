@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 3. Make HTTP request ke Railway API
-            const apiUrl = 'https://fakenewsml-production.up.railway.app/predict';
+            const apiUrl = 'https://fakenewsbe-production.up.railway.app/predict';
 
             let response;
             try {
